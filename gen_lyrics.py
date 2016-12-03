@@ -1,11 +1,15 @@
+#coding=utf-8 
 from tensorflow.python.ops import rnn_cell
 from tensorflow.python.ops import seq2seq
 import tensorflow as tf
 import numpy as np
 import sys
 import time
-
-
+import codecs
+'''
+reload(sys) 
+sys.setdefaultencoding('utf-8') 
+'''
 class HParam():
     def __init__(self):
         self.batch_size = 32
@@ -25,18 +29,17 @@ class DataGenerator():
     def __init__(self, datafiles, args):
         self.seq_length = args.seq_length
         self.batch_size = args.batch_size
-        with open(datafiles, encoding='utf-8') as f:
-            self.data = f.read()
-        
+        with open(datafiles) as f:
+            self.data = f.read().strip().decode('utf-8')
         self.total_len = len(self.data) # total data length
+        st = set(self.data)
         self.words = list(set(self.data))
-        self.words.sort()
+        self.words.sort() #words must sample:  {2636: u'\uff5e'}
          # vocabulary
         self.vocab_size = len(self.words) # vocabulary size
         print('Vocabulary Size: ', self.vocab_size)
         self.char2id_dict = {w: i for i, w in enumerate(self.words)}
         self.id2char_dict = {i: w for i, w in enumerate(self.words)}
-        
         # pointer position to generate current batch
         self._pointer = 0
         
@@ -47,6 +50,8 @@ class DataGenerator():
 
     def id2char(self, id):
         return self.id2char_dict[id]
+    def char2setid(self,c):
+        return self.char2id_dict[c]
 
 
     def next_batch(self):
@@ -138,7 +143,7 @@ def sample(data, model, num=400):
 
         for word in prime[:-1]:
             x = np.zeros((1,1))
-            x[0,0] = data.char2id(word)
+            x[0,0] = data.char2setid(word)
             feed = {model.input_data: x, model.initial_state: state}
             state = sess.run(model.last_state, feed)
 
@@ -151,7 +156,7 @@ def sample(data, model, num=400):
             probs, state = sess.run([model.probs, model.last_state], feed_dict)
             p = probs[0]
             word = data.id2char(np.argmax(p))
-            print(word, end='')
+            print(word.encode('utf-8')),
             sys.stdout.flush()
             time.sleep(0.05)
             lyrics += word
@@ -164,6 +169,7 @@ def main(infer):
     args = HParam()
     data = DataGenerator('JayLyrics.txt', args)
     model = Model(args, data, infer=infer)
+    #print(data)
 
     if infer:
         sample(data, model, 1000)
