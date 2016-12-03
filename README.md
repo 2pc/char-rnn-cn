@@ -112,7 +112,8 @@
 叛军如野火般攻击
 五官差场
 ```
-to void "UnicodeEncodeError: 'ascii' codec can't encode characters in position",when print '\uxxxx' 
+### to void "UnicodeEncodeError: 'ascii' codec can't encode characters in position",when print '\uxxxx' 
+
 python3.5.1
 ```
 import io
